@@ -31,6 +31,10 @@ export const GET = async (request: NextRequest) => {
   }
 
   //filter by student id here
+  if(studentId!=null)
+  {
+    filtered=filtered.filter((std)=>std.studentId===studentId);
+  }
 
   return NextResponse.json({ ok: true, students: filtered });
 };
@@ -98,8 +102,25 @@ export const PUT = async (request: NextRequest) => {
 
 export const DELETE = async (request: NextRequest) => {
   //get body and validate it
-
+  const studentId = request.nextUrl.searchParams.get("studentId");
+  const parseResult = zStudentGetParam.safeParse({
+    studentId,
+  });
   //check if student id exist
+  if(parseResult.success===false){
+    return NextResponse.json({
+        ok:false,
+        message: "Student Id must contain 9 characters",
+    },{status:400,});
+  }
+  const foundId = DB.students.findIndex((student)=>student.studentId===studentId);
+  if(foundId===-1){
+    return NextResponse.json({
+        ok:false,
+        message:`Student ID does not exist`
+    },{status:404,});
+}
+
 
   //perform removing student from DB. You can choose from 2 choices
   //1. use array filter method
@@ -107,9 +128,11 @@ export const DELETE = async (request: NextRequest) => {
 
   //or 2. use splice array method
   // DB.students.splice(...)
+  //delete method
+  DB.students = DB.students.filter(student=>student.studentId!==studentId);
 
   return NextResponse.json({
     ok: true,
-    message: `Student Id xxx has been deleted`,
+    message: `Student Id ${studentId} has been deleted`,
   });
 };
